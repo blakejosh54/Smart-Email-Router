@@ -1,0 +1,647 @@
+{
+  "name": "Smart email router",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "readStatus": "unread"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -832,
+        -112
+      ],
+      "id": "f359ac21-7fcb-429d-bbd8-396e0b05cdf3",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "vPy14p74yRMfBo1s",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.Subject }}",
+                    "rightValue": "Invoice",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "c75d5023-a584-4db9-b1aa-7434e2e94b80"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Invoice"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "03595d66-b5c7-4181-a5cf-5c60362c0c57",
+                    "leftValue": "={{ $json.Subject }}",
+                    "rightValue": "Lead",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "50658567-29b0-43e4-a386-6647e01e4198",
+                    "leftValue": "={{ $json.Subject }}",
+                    "rightValue": "Urgent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Urgent"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -624,
+        -112
+      ],
+      "id": "6ab34e8f-4807-4a48-b1b2-781ae0bdef52",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "select": "user",
+        "user": {
+          "__rl": true,
+          "value": "U0B87FEQW8M",
+          "mode": "list",
+          "cachedResultName": "bjwhostingweb1"
+        },
+        "text": "=New Lead Email Recieved\nSender: {{ $('Gmail Trigger').item.json.From }}\nSubject: {{ $('Gmail Trigger').item.json.Subject }}\nTime: {{ $('Gmail Trigger').item.json.internalDate }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        -352,
+        -208
+      ],
+      "id": "0824dd47-007a-47a5-ac3d-0a93bcfe6277",
+      "name": "Send a message",
+      "webhookId": "43f79a0d-4578-4681-b179-dc46c39b847a",
+      "credentials": {
+        "slackApi": {
+          "id": "dMkNeo5VMwugAGwL",
+          "name": "Slack account 2"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "IMPORTANT"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -352,
+        -384
+      ],
+      "id": "ef1c7fc6-0a13-466d-8a9a-0f3fde841c7d",
+      "name": "Add to important folder",
+      "webhookId": "80366c9d-a579-4d0a-969c-90472b1ea454",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "vPy14p74yRMfBo1s",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "Label_6363337949502693616"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -352,
+        -32
+      ],
+      "id": "d325ef95-230a-4a4e-a327-e6565231d70e",
+      "name": "Add to Urgent folder",
+      "webhookId": "80366c9d-a579-4d0a-969c-90472b1ea454",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "vPy14p74yRMfBo1s",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "INBOX"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -352,
+        144
+      ],
+      "id": "e35a3096-db2c-415d-b0d7-ee0e50b03b9f",
+      "name": "Add to inbox",
+      "webhookId": "80366c9d-a579-4d0a-969c-90472b1ea454",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "vPy14p74yRMfBo1s",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fe2f724a-e414-489b-b76f-195b907cbb7d",
+              "name": "sender",
+              "value": "={{ $('Gmail Trigger').item.json.From }}",
+              "type": "string"
+            },
+            {
+              "id": "f16665b4-d107-4e73-8fcd-e90f3281a72f",
+              "name": "subject",
+              "value": "={{ $('Gmail Trigger').item.json.Subject }}",
+              "type": "string"
+            },
+            {
+              "id": "c656270c-9841-4bcd-b042-6261e8db2bee",
+              "name": "recieved_time",
+              "value": "={{ $('Gmail Trigger').item.json.internalDate }}",
+              "type": "string"
+            },
+            {
+              "id": "bfc39bc5-0ccd-434e-8740-f845841459f4",
+              "name": "category",
+              "value": "Invoice",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -144,
+        -384
+      ],
+      "id": "cf834545-2be8-40cd-8d28-5e56575c7b67",
+      "name": "Invoice branch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fe2f724a-e414-489b-b76f-195b907cbb7d",
+              "name": "sender",
+              "value": "={{ $('Gmail Trigger').item.json.From }}",
+              "type": "string"
+            },
+            {
+              "id": "f16665b4-d107-4e73-8fcd-e90f3281a72f",
+              "name": "subject",
+              "value": "={{ $('Gmail Trigger').item.json.Subject }}",
+              "type": "string"
+            },
+            {
+              "id": "c656270c-9841-4bcd-b042-6261e8db2bee",
+              "name": "recieved_time",
+              "value": "={{ $('Gmail Trigger').item.json.internalDate }}",
+              "type": "string"
+            },
+            {
+              "id": "bfc39bc5-0ccd-434e-8740-f845841459f4",
+              "name": "category",
+              "value": "Lead",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -144,
+        -208
+      ],
+      "id": "62fcf335-99b0-49e3-a650-473f244d73b3",
+      "name": "Lead branch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fe2f724a-e414-489b-b76f-195b907cbb7d",
+              "name": "sender",
+              "value": "={{ $('Gmail Trigger').item.json.From }}",
+              "type": "string"
+            },
+            {
+              "id": "f16665b4-d107-4e73-8fcd-e90f3281a72f",
+              "name": "subject",
+              "value": "={{ $('Gmail Trigger').item.json.Subject }}",
+              "type": "string"
+            },
+            {
+              "id": "c656270c-9841-4bcd-b042-6261e8db2bee",
+              "name": "recieved_time",
+              "value": "={{ $('Gmail Trigger').item.json.internalDate }}",
+              "type": "string"
+            },
+            {
+              "id": "bfc39bc5-0ccd-434e-8740-f845841459f4",
+              "name": "category",
+              "value": "Urgent",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -144,
+        -32
+      ],
+      "id": "0f26d2ab-df28-44b7-87d8-69cec8b08011",
+      "name": "Urgent branch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fe2f724a-e414-489b-b76f-195b907cbb7d",
+              "name": "sender",
+              "value": "={{ $('Gmail Trigger').item.json.From }}",
+              "type": "string"
+            },
+            {
+              "id": "f16665b4-d107-4e73-8fcd-e90f3281a72f",
+              "name": "subject",
+              "value": "={{ $('Gmail Trigger').item.json.Subject }}",
+              "type": "string"
+            },
+            {
+              "id": "c656270c-9841-4bcd-b042-6261e8db2bee",
+              "name": "recieved_time",
+              "value": "={{ $('Gmail Trigger').item.json.internalDate }}",
+              "type": "string"
+            },
+            {
+              "id": "bfc39bc5-0ccd-434e-8740-f845841459f4",
+              "name": "category",
+              "value": "Other",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -144,
+        144
+      ],
+      "id": "bc72256b-5e13-4ead-87cc-fc1019646230",
+      "name": "Other branch"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        192,
+        -160
+      ],
+      "id": "f63e6cef-33f0-4504-b577-f22dbf8db6ae",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1LHVYaM3PNMGOV3MSqrmF7twgxUpsHh6ZWgG-vcdGKiQ",
+          "mode": "list",
+          "cachedResultName": "Smart Email Router",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1LHVYaM3PNMGOV3MSqrmF7twgxUpsHh6ZWgG-vcdGKiQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1LHVYaM3PNMGOV3MSqrmF7twgxUpsHh6ZWgG-vcdGKiQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Sender": "={{ $json.sender }}",
+            "Subject": "={{ $json.subject }}",
+            "Recieved Time": "={{ $json.recieved_time }}",
+            "Category": "={{ $json.category }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Sender",
+              "displayName": "Sender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Recieved Time",
+              "displayName": "Recieved Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        -160
+      ],
+      "id": "e2a2619e-6417-4d37-a1d0-65257da7bc63",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wai9RiqvwlrZRI0N",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Add to important folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add to Urgent folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add to inbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to important folder": {
+      "main": [
+        [
+          {
+            "node": "Invoice branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to Urgent folder": {
+      "main": [
+        [
+          {
+            "node": "Urgent branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to inbox": {
+      "main": [
+        [
+          {
+            "node": "Other branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Lead branch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invoice branch": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead branch": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Urgent branch": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Other branch": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "d519c76b-a79d-45f0-9f8b-b23ca07caaf6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "52618f391db7e68757094f78bd68efcc86c0942769c4a223a0a9297457b0d014"
+  },
+  "nodeGroups": [],
+  "id": "oHZ6PzfZ1JuxYNt5",
+  "tags": []
+}
